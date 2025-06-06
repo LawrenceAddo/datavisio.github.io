@@ -1,0 +1,1521 @@
+        .help-section {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 197, 253, 0.05));
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            border: 2px solid rgba(59, 130, 246, 0.1);
+            position: relative;
+        }
+
+        .help-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            border-radius: 2px;
+        }
+
+        .help-section h4 {
+            color: #1e3a8a;
+            margin-bottom: 16px;
+            font-weight: 700;
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help-section h4::before {
+            content: '💡';
+            font-size: 18px;
+        }
+
+        .help-section p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+
+        .help-section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+            color: #047857;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .status-success::before {
+            content: '✅';
+            font-size: 16px;
+        }
+
+        .status-error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+            color: #dc2626;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .status-error::before {
+            content: '❌';
+            font-size: 16px;<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataViz Pro - Advanced Data Visualization Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%);
+            min-height: 100vh;
+            color: #1f2937;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(147, 197, 253, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(30, 64, 175, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        .header-badges {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+            min-height: 80vh;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 
+                0 20px 40px rgba(30, 58, 138, 0.1),
+                0 8px 16px rgba(30, 58, 138, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            height: fit-content;
+            position: sticky;
+            top: 24px;
+        }
+
+        .content-area {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 0;
+            box-shadow: 
+                0 20px 40px rgba(30, 58, 138, 0.1),
+                0 8px 16px rgba(30, 58, 138, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            min-height: 700px;
+            overflow: hidden;
+        }
+
+        .tab-container {
+            display: flex;
+            margin: 0;
+            border-bottom: none;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            border-radius: 20px 20px 0 0;
+            padding: 8px;
+            gap: 4px;
+        }
+
+        .tab {
+            padding: 16px 24px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tab:hover::before {
+            opacity: 1;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1e3a8a;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .tab.active::before {
+            opacity: 0;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 32px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section h3 {
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            font-size: 1.125rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section h3::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            border-radius: 2px;
+        }
+
+        .file-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 14px;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-label::before {
+            content: '📁';
+            font-size: 18px;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .file-input-label:active {
+            transform: translateY(0);
+        }
+
+        .select, .input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .select:focus, .input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .select:hover, .input:hover {
+            border-color: #60a5fa;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #ec4899, #f97316);
+            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.2);
+        }
+
+        .btn.secondary:hover {
+            box-shadow: 0 8px 25px rgba(236, 72, 153, 0.3);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 450px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: inset 0 2px 8px rgba(30, 58, 138, 0.08);
+        }
+
+        .data-preview {
+            max-height: 400px;
+            overflow: auto;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            font-weight: 700;
+            color: #1e3a8a;
+            position: sticky;
+            top: 0;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .pivot-table-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .pivot-controls {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 24px;
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .pivot-result {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 24px;
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+            overflow: auto;
+        }
+
+        .animation-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 24px;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .time-slider {
+            flex: 1;
+            margin: 0 16px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            outline: none;
+        }
+
+        .time-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
+        }
+
+        .time-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .help-section {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .help-section h4 {
+            color: #17a2b8;
+            margin-bottom: 10px;
+        }
+
+        .help-section p {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .drag-drop-area {
+            border: 3px dashed #3b82f6;
+            border-radius: 16px;
+            padding: 48px 32px;
+            text-align: center;
+            color: #1e3a8a;
+            margin-bottom: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 197, 253, 0.05));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drag-drop-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 30%, rgba(59, 130, 246, 0.05) 50%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .drag-drop-area:hover::before {
+            opacity: 1;
+        }
+
+        .drag-drop-area.dragover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1));
+            border-color: #1e3a8a;
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(30, 58, 138, 0.15);
+        }
+
+        .drag-drop-area p {
+            font-weight: 600;
+            font-size: 16px;
+            margin: 8px 0;
+        }
+
+        .drag-drop-area p:first-child {
+            font-size: 18px;
+            color: #1e3a8a;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .pivot-table-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>DataViz Pro</h1>
+            <p>Advanced Data Visualization & Analysis Tool</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="section">
+                    <h3>Data Import</h3>
+                    <div class="drag-drop-area" id="dragDropArea">
+                        <p>Drag & Drop files here</p>
+                        <p>or</p>
+                        <div class="file-input-container">
+                            <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx,.json" multiple>
+                            <label for="fileInput" class="file-input-label">Choose Files</label>
+                        </div>
+                    </div>
+                    <div id="statusMessage"></div>
+                </div>
+
+                <div class="section">
+                    <h3>Chart Type</h3>
+                    <select id="chartType" class="select">
+                        <option value="bar">Bar Chart</option>
+                        <option value="line">Line Chart</option>
+                        <option value="pie">Pie Chart</option>
+                        <option value="scatter">Scatter Plot</option>
+                        <option value="area">Area Chart</option>
+                        <option value="column">Column Chart</option>
+                    </select>
+                </div>
+
+                <div class="section">
+                    <h3>Data Columns</h3>
+                    <select id="xAxis" class="select">
+                        <option value="">Select X-Axis</option>
+                    </select>
+                    <select id="yAxis" class="select">
+                        <option value="">Select Y-Axis</option>
+                    </select>
+                    <select id="groupBy" class="select">
+                        <option value="">Group By (Optional)</option>
+                    </select>
+                </div>
+
+                <div class="section">
+                    <button id="generateChart" class="btn">Generate Chart</button>
+                    <button id="exportChart" class="btn secondary">Export Chart</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="tab-container">
+                    <button class="tab active" data-tab="visualization">Visualization</button>
+                    <button class="tab" data-tab="pivot">Pivot Table</button>
+                    <button class="tab" data-tab="animation">Time Series</button>
+                    <button class="tab" data-tab="data">Data Preview</button>
+                    <button class="tab" data-tab="help">Help</button>
+                </div>
+
+                <div class="tab-content active" id="visualization">
+                    <div class="loading" id="loadingViz">
+                        <div class="spinner"></div>
+                        <p>Generating visualization...</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="pivot">
+                    <div class="help-section">
+                        <h4>Pivot Table</h4>
+                        <p>Create dynamic pivot tables to analyze your data. Select row and column fields, choose values to aggregate, and apply filters.</p>
+                    </div>
+                    <div class="pivot-table-container">
+                        <div class="pivot-controls">
+                            <h4>Pivot Configuration</h4>
+                            <label>Rows:</label>
+                            <select id="pivotRows" class="select"></select>
+                            <label>Columns:</label>
+                            <select id="pivotCols" class="select"></select>
+                            <label>Values:</label>
+                            <select id="pivotValues" class="select"></select>
+                            <label>Aggregation:</label>
+                            <select id="pivotAgg" class="select">
+                                <option value="sum">Sum</option>
+                                <option value="avg">Average</option>
+                                <option value="count">Count</option>
+                                <option value="min">Minimum</option>
+                                <option value="max">Maximum</option>
+                            </select>
+                            <button id="generatePivot" class="btn">Generate Pivot</button>
+                        </div>
+                        <div class="pivot-result" id="pivotResult">
+                            <p>Configure and generate your pivot table</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="animation">
+                    <div class="help-section">
+                        <h4>Time Series Animation</h4>
+                        <p>Create animated visualizations to show data changes over time. Similar to GapMinder's animated charts.</p>
+                    </div>
+                    <div class="animation-controls">
+                        <button id="playAnimation" class="play-btn">▶</button>
+                        <input type="range" id="timeSlider" class="time-slider" min="0" max="100" value="0">
+                        <span id="timeDisplay">Year: 2020</span>
+                        <label>Time Field:</label>
+                        <select id="timeField" class="select"></select>
+                        <label>Speed:</label>
+                        <select id="animationSpeed" class="select">
+                            <option value="2000">Slow</option>
+                            <option value="1000" selected>Medium</option>
+                            <option value="500">Fast</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="animationChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="data">
+                    <div class="help-section">
+                        <h4>Data Preview</h4>
+                        <p>View and inspect your imported data. Use this to understand the structure and content of your dataset.</p>
+                    </div>
+                    <div class="data-preview" id="dataPreview">
+                        <p>No data imported yet. Please import a CSV, XLSX, or JSON file to begin.</p>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="help">
+                    <div class="help-section">
+                        <h4>Getting Started</h4>
+                        <p><strong>1. Import Data:</strong> Drag and drop or select CSV, XLSX, or JSON files. The tool supports multiple file formats and automatically detects the structure.</p>
+                        <p><strong>2. Choose Visualization:</strong> Select from bar charts, line graphs, pie charts, scatter plots, area charts, or column charts.</p>
+                        <p><strong>3. Configure Axes:</strong> Choose which columns to use for X and Y axes, and optionally group data by categories.</p>
+                    </div>
+                    <div class="help-section">
+                        <h4>Pivot Tables</h4>
+                        <p><strong>Rows:</strong> Fields that will become row headers in your pivot table.</p>
+                        <p><strong>Columns:</strong> Fields that will become column headers.</p>
+                        <p><strong>Values:</strong> Numeric fields to aggregate (sum, average, count, etc.).</p>
+                        <p><strong>Filters:</strong> Use the aggregation dropdown to choose how values are calculated.</p>
+                    </div>
+                    <div class="help-section">
+                        <h4>Time Series Animation</h4>
+                        <p>For datasets with time-based data, you can create animated visualizations that show changes over time. Select a time field and watch your data come alive!</p>
+                    </div>
+                    <div class="help-section">
+                        <h4>Supported File Formats</h4>
+                        <p><strong>CSV:</strong> Comma-separated values with headers</p>
+                        <p><strong>XLSX:</strong> Excel spreadsheets (first sheet used)</p>
+                        <p><strong>JSON:</strong> Array of objects or nested structures</p>
+                    </div>
+                    <div class="help-section">
+                        <h4>Tips & Tricks</h4>
+                        <p>• Hover over chart elements for detailed information</p>
+                        <p>• Use the export function to save charts as images</p>
+                        <p>• Large datasets are automatically optimized for performance</p>
+                        <p>• All processing happens in your browser - your data stays private</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        class DataVizTool {
+            constructor() {
+                this.data = [];
+                this.originalData = [];
+                this.currentChart = null;
+                this.animationChart = null;
+                this.isAnimating = false;
+                this.animationInterval = null;
+                this.timeSeriesData = [];
+                this.currentTimeIndex = 0;
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.setupDragAndDrop();
+                this.setupTooltips();
+            }
+
+            setupEventListeners() {
+                // File input
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    this.handleFileSelect(e.target.files);
+                });
+
+                // Chart generation
+                document.getElementById('generateChart').addEventListener('click', () => {
+                    this.generateChart();
+                });
+
+                // Chart export
+                document.getElementById('exportChart').addEventListener('click', () => {
+                    this.exportChart();
+                });
+
+                // Pivot table
+                document.getElementById('generatePivot').addEventListener('click', () => {
+                    this.generatePivotTable();
+                });
+
+                // Animation controls
+                document.getElementById('playAnimation').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('timeSlider').addEventListener('input', (e) => {
+                    this.updateAnimationFrame(parseInt(e.target.value));
+                });
+
+                // Tab switching
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        this.switchTab(e.target.dataset.tab);
+                    });
+                });
+
+                // Chart type change
+                document.getElementById('chartType').addEventListener('change', () => {
+                    if (this.data.length > 0) {
+                        this.generateChart();
+                    }
+                });
+            }
+
+            setupDragAndDrop() {
+                const dragDropArea = document.getElementById('dragDropArea');
+                
+                dragDropArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dragDropArea.classList.add('dragover');
+                });
+
+                dragDropArea.addEventListener('dragleave', () => {
+                    dragDropArea.classList.remove('dragover');
+                });
+
+                dragDropArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dragDropArea.classList.remove('dragover');
+                    this.handleFileSelect(e.dataTransfer.files);
+                });
+            }
+
+            setupTooltips() {
+                const tooltip = document.getElementById('tooltip');
+                
+                document.addEventListener('mouseover', (e) => {
+                    if (e.target.hasAttribute('data-tooltip')) {
+                        tooltip.textContent = e.target.getAttribute('data-tooltip');
+                        tooltip.style.opacity = '1';
+                    }
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    tooltip.style.left = e.pageX + 10 + 'px';
+                    tooltip.style.top = e.pageY + 10 + 'px';
+                });
+
+                document.addEventListener('mouseout', (e) => {
+                    if (e.target.hasAttribute('data-tooltip')) {
+                        tooltip.style.opacity = '0';
+                    }
+                });
+            }
+
+            showStatus(message, type = 'info') {
+                const statusEl = document.getElementById('statusMessage');
+                statusEl.className = `status-message status-${type}`;
+                statusEl.textContent = message;
+                setTimeout(() => {
+                    statusEl.textContent = '';
+                    statusEl.className = '';
+                }, 5000);
+            }
+
+            async handleFileSelect(files) {
+                if (files.length === 0) return;
+
+                this.showStatus('Processing files...', 'warning');
+                
+                try {
+                    const file = files[0];
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    
+                    let data;
+                    switch (extension) {
+                        case 'csv':
+                            data = await this.parseCSV(file);
+                            break;
+                        case 'xlsx':
+                            data = await this.parseXLSX(file);
+                            break;
+                        case 'json':
+                            data = await this.parseJSON(file);
+                            break;
+                        default:
+                            throw new Error('Unsupported file format');
+                    }
+                    
+                    this.data = data;
+                    this.originalData = [...data];
+                    this.updateColumnSelectors();
+                    this.updateDataPreview();
+                    this.showStatus(`Successfully loaded ${data.length} rows`, 'success');
+                } catch (error) {
+                    this.showStatus(`Error: ${error.message}`, 'error');
+                }
+            }
+
+            parseCSV(file) {
+                return new Promise((resolve, reject) => {
+                    Papa.parse(file, {
+                        header: true,
+                        dynamicTyping: true,
+                        skipEmptyLines: true,
+                        complete: (results) => {
+                            if (results.errors.length > 0) {
+                                reject(new Error(results.errors[0].message));
+                            } else {
+                                resolve(results.data);
+                            }
+                        },
+                        error: (error) => reject(error)
+                    });
+                });
+            }
+
+            async parseXLSX(file) {
+                const data = await file.arrayBuffer();
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheet];
+                return XLSX.utils.sheet_to_json(worksheet);
+            }
+
+            async parseJSON(file) {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                return Array.isArray(data) ? data : [data];
+            }
+
+            updateColumnSelectors() {
+                if (this.data.length === 0) return;
+
+                const columns = Object.keys(this.data[0]);
+                const selectors = ['xAxis', 'yAxis', 'groupBy', 'pivotRows', 'pivotCols', 'pivotValues', 'timeField'];
+                
+                selectors.forEach(selectorId => {
+                    const selector = document.getElementById(selectorId);
+                    if (selector) {
+                        selector.innerHTML = '<option value="">Select Column</option>';
+                        columns.forEach(col => {
+                            const option = document.createElement('option');
+                            option.value = col;
+                            option.textContent = col;
+                            selector.appendChild(option);
+                        });
+                    }
+                });
+            }
+
+            updateDataPreview() {
+                const preview = document.getElementById('dataPreview');
+                if (this.data.length === 0) {
+                    preview.innerHTML = '<p>No data available</p>';
+                    return;
+                }
+
+                const columns = Object.keys(this.data[0]);
+                const maxRows = Math.min(100, this.data.length);
+                
+                let html = '<table class="data-table"><thead><tr>';
+                columns.forEach(col => {
+                    html += `<th>${col}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                
+                for (let i = 0; i < maxRows; i++) {
+                    html += '<tr>';
+                    columns.forEach(col => {
+                        const value = this.data[i][col];
+                        html += `<td>${value !== null && value !== undefined ? value : ''}</td>`;
+                    });
+                    html += '</tr>';
+                }
+                
+                html += '</tbody></table>';
+                preview.innerHTML = html;
+            }
+
+            generateChart() {
+                const chartType = document.getElementById('chartType').value;
+                const xAxis = document.getElementById('xAxis').value;
+                const yAxis = document.getElementById('yAxis').value;
+                
+                if (!xAxis || !yAxis || this.data.length === 0) {
+                    this.showStatus('Please select both X and Y axes', 'error');
+                    return;
+                }
+
+                const loading = document.getElementById('loadingViz');
+                loading.classList.add('show');
+
+                setTimeout(() => {
+                    try {
+                        this.createChart(chartType, xAxis, yAxis);
+                        loading.classList.remove('show');
+                        this.showStatus('Chart generated successfully', 'success');
+                    } catch (error) {
+                        loading.classList.remove('show');
+                        this.showStatus(`Chart generation failed: ${error.message}`, 'error');
+                    }
+                }, 500);
+            }
+
+            createChart(type, xAxis, yAxis) {
+                const ctx = document.getElementById('mainChart').getContext('2d');
+                
+                if (this.currentChart) {
+                    this.currentChart.destroy();
+                }
+
+                const groupBy = document.getElementById('groupBy').value;
+                const chartData = this.prepareChartData(xAxis, yAxis, groupBy);
+                
+                const config = {
+                    type: type === 'column' ? 'bar' : type,
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `${yAxis} vs ${xAxis}`,
+                                font: { size: 16 }
+                            },
+                            legend: {
+                                display: !!groupBy
+                            }
+                        },
+                        scales: type !== 'pie' ? {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: xAxis
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: yAxis
+                                }
+                            }
+                        } : {}
+                    }
+                };
+
+                if (type === 'area') {
+                    config.type = 'line';
+                    config.data.datasets.forEach(dataset => {
+                        dataset.fill = true;
+                        dataset.backgroundColor = dataset.borderColor + '40';
+                    });
+                }
+
+                this.currentChart = new Chart(ctx, config);
+            }
+
+            prepareChartData(xAxis, yAxis, groupBy) {
+                const data = {
+                    labels: [],
+                    datasets: []
+                };
+
+                if (groupBy) {
+                    const grouped = _.groupBy(this.data, groupBy);
+                    const colors = this.generateColors(Object.keys(grouped).length);
+                    
+                    Object.keys(grouped).forEach((group, index) => {
+                        const groupData = grouped[group];
+                        const labels = groupData.map(item => item[xAxis]);
+                        const values = groupData.map(item => parseFloat(item[yAxis]) || 0);
+                        
+                        if (index === 0) {
+                            data.labels = labels;
+                        }
+                        
+                        data.datasets.push({
+                            label: group,
+                            data: values,
+                            backgroundColor: colors[index],
+                            borderColor: colors[index],
+                            borderWidth: 2
+                        });
+                    });
+                } else {
+                    data.labels = this.data.map(item => item[xAxis]);
+                    const values = this.data.map(item => parseFloat(item[yAxis]) || 0);
+                    
+                    data.datasets.push({
+                        label: yAxis,
+                        data: values,
+                        backgroundColor: this.generateColors(1)[0],
+                        borderColor: this.generateColors(1)[0],
+                        borderWidth: 2
+                    });
+                }
+
+                return data;
+            }
+
+            generateColors(count) {
+                const colors = [
+                    '#667eea', '#764ba2', '#f093fb', '#f5576c',
+                    '#4facfe', '#00f2fe', '#43e97b', '#38f9d7',
+                    '#ffecd2', '#fcb69f', '#a8edea', '#fed6e3',
+                    '#fad0c4', '#ffd1ff', '#c2e9fb', '#a1c4fd'
+                ];
+                
+                return colors.slice(0, count);
+            }
+
+            generatePivotTable() {
+                const rows = document.getElementById('pivotRows').value;
+                const cols = document.getElementById('pivotCols').value;
+                const values = document.getElementById('pivotValues').value;
+                const aggregation = document.getElementById('pivotAgg').value;
+                
+                if (!rows || !values) {
+                    this.showStatus('Please select at least rows and values for pivot table', 'error');
+                    return;
+                }
+
+                try {
+                    const pivotData = this.createPivotTable(rows, cols, values, aggregation);
+                    this.displayPivotTable(pivotData, rows, cols, values, aggregation);
+                    this.showStatus('Pivot table generated successfully', 'success');
+                } catch (error) {
+                    this.showStatus(`Pivot table generation failed: ${error.message}`, 'error');
+                }
+            }
+
+            createPivotTable(rowField, colField, valueField, aggFunction) {
+                const grouped = _.groupBy(this.data, rowField);
+                const result = {};
+                const columnSet = new Set();
+                
+                Object.keys(grouped).forEach(rowKey => {
+                    result[rowKey] = {};
+                    
+                    if (colField) {
+                        const subGrouped = _.groupBy(grouped[rowKey], colField);
+                        Object.keys(subGrouped).forEach(colKey => {
+                            columnSet.add(colKey);
+                            const values = subGrouped[colKey].map(item => parseFloat(item[valueField]) || 0);
+                            result[rowKey][colKey] = this.applyAggregation(values, aggFunction);
+                        });
+                    } else {
+                        const values = grouped[rowKey].map(item => parseFloat(item[valueField]) || 0);
+                        result[rowKey]['Total'] = this.applyAggregation(values, aggFunction);
+                        columnSet.add('Total');
+                    }
+                });
+                
+                return {
+                    data: result,
+                    columns: Array.from(columnSet).sort()
+                };
+            }
+
+            applyAggregation(values, aggFunction) {
+                switch (aggFunction) {
+                    case 'sum':
+                        return values.reduce((a, b) => a + b, 0);
+                    case 'avg':
+                        return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+                    case 'count':
+                        return values.length;
+                    case 'min':
+                        return Math.min(...values);
+                    case 'max':
+                        return Math.max(...values);
+                    default:
+                        return values.reduce((a, b) => a + b, 0);
+                }
+            }
+
+            displayPivotTable(pivotData, rowField, colField, valueField, aggFunction) {
+                const container = document.getElementById('pivotResult');
+                const { data, columns } = pivotData;
+                
+                let html = `<h4>Pivot Table: ${aggFunction.toUpperCase()}(${valueField})</h4>`;
+                html += '<table class="data-table"><thead><tr>';
+                html += `<th>${rowField}</th>`;
+                columns.forEach(col => {
+                    html += `<th>${col}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                
+                Object.keys(data).forEach(rowKey => {
+                    html += '<tr>';
+                    html += `<td><strong>${rowKey}</strong></td>`;
+                    columns.forEach(col => {
+                        const value = data[rowKey][col] || 0;
+                        html += `<td>${typeof value === 'number' ? value.toFixed(2) : value}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            setupTimeSeriesAnimation() {
+                const timeField = document.getElementById('timeField').value;
+                if (!timeField || this.data.length === 0) {
+                    this.showStatus('Please select a time field for animation', 'error');
+                    return;
+                }
+
+                // Group data by time periods
+                const timeGroups = _.groupBy(this.data, timeField);
+                this.timeSeriesData = Object.keys(timeGroups).sort().map(time => ({
+                    time: time,
+                    data: timeGroups[time]
+                }));
+
+                // Update slider
+                const slider = document.getElementById('timeSlider');
+                slider.max = this.timeSeriesData.length - 1;
+                slider.value = 0;
+                this.currentTimeIndex = 0;
+                
+                this.updateAnimationFrame(0);
+            }
+
+            toggleAnimation() {
+                const playBtn = document.getElementById('playAnimation');
+                
+                if (this.isAnimating) {
+                    this.stopAnimation();
+                    playBtn.textContent = '▶';
+                } else {
+                    this.startAnimation();
+                    playBtn.textContent = '⏸';
+                }
+            }
+
+            startAnimation() {
+                if (this.timeSeriesData.length === 0) {
+                    this.setupTimeSeriesAnimation();
+                }
+                
+                this.isAnimating = true;
+                const speed = parseInt(document.getElementById('animationSpeed').value);
+                
+                this.animationInterval = setInterval(() => {
+                    this.currentTimeIndex++;
+                    if (this.currentTimeIndex >= this.timeSeriesData.length) {
+                        this.currentTimeIndex = 0;
+                    }
+                    
+                    this.updateAnimationFrame(this.currentTimeIndex);
+                    document.getElementById('timeSlider').value = this.currentTimeIndex;
+                }, speed);
+            }
+
+            stopAnimation() {
+                this.isAnimating = false;
+                if (this.animationInterval) {
+                    clearInterval(this.animationInterval);
+                    this.animationInterval = null;
+                }
+            }
+
+            updateAnimationFrame(index) {
+                if (this.timeSeriesData.length === 0) return;
+                
+                const currentData = this.timeSeriesData[index];
+                document.getElementById('timeDisplay').textContent = `Time: ${currentData.time}`;
+                
+                // Update the animation chart
+                this.createAnimationChart(currentData.data);
+            }
+
+            createAnimationChart(data) {
+                const ctx = document.getElementById('animationChart').getContext('2d');
+                
+                if (this.animationChart) {
+                    this.animationChart.destroy();
+                }
+
+                const xAxis = document.getElementById('xAxis').value;
+                const yAxis = document.getElementById('yAxis').value;
+                
+                if (!xAxis || !yAxis) return;
+
+                const chartData = {
+                    labels: data.map(item => item[xAxis]),
+                    datasets: [{
+                        label: yAxis,
+                        data: data.map(item => parseFloat(item[yAxis]) || 0),
+                        backgroundColor: this.generateColors(1)[0],
+                        borderColor: this.generateColors(1)[0],
+                        borderWidth: 2
+                    }]
+                };
+
+                this.animationChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 500
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `${yAxis} vs ${xAxis} - Animated`,
+                                font: { size: 16 }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: xAxis
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: yAxis
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            exportChart() {
+                if (!this.currentChart) {
+                    this.showStatus('No chart to export', 'error');
+                    return;
+                }
+
+                const canvas = document.getElementById('mainChart');
+                const link = document.createElement('a');
+                link.download = 'chart.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                
+                this.showStatus('Chart exported successfully', 'success');
+            }
+
+            switchTab(tabName) {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Add active class to selected tab and content
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                document.getElementById(tabName).classList.add('active');
+                
+                // Special handling for animation tab
+                if (tabName === 'animation' && this.data.length > 0) {
+                    setTimeout(() => {
+                        this.setupTimeSeriesAnimation();
+                    }, 100);
+                }
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            window.dataVizTool = new DataVizTool();
+        });
+
+        // Sample data for demonstration
+        window.addEventListener('load', () => {
+            // Create sample data for demonstration
+            const sampleData = [
+                { Country: 'USA', Population: 331000000, GDP: 21430000, Year: 2020 },
+                { Country: 'China', Population: 1439000000, GDP: 14720000, Year: 2020 },
+                { Country: 'Japan', Population: 126000000, GDP: 5082000, Year: 2020 },
+                { Country: 'Germany', Population: 83000000, GDP: 3846000, Year: 2020 },
+                { Country: 'India', Population: 1380000000, GDP: 2875000, Year: 2020 },
+                { Country: 'USA', Population: 329000000, GDP: 20950000, Year: 2019 },
+                { Country: 'China', Population: 1433000000, GDP: 14340000, Year: 2019 },
+                { Country: 'Japan', Population: 126500000, GDP: 5080000, Year: 2019 },
+                { Country: 'Germany', Population: 83100000, GDP: 3449000, Year: 2019 },
+                { Country: 'India', Population: 1366000000, GDP: 2870000, Year: 2019 }
+            ];
+            
+            // Add a demo button
+            const demoBtn = document.createElement('button');
+            demoBtn.textContent = 'Load Demo Data';
+            demoBtn.className = 'btn';
+            demoBtn.onclick = () => {
+                window.dataVizTool.data = sampleData;
+                window.dataVizTool.originalData = [...sampleData];
+                window.dataVizTool.updateColumnSelectors();
+                window.dataVizTool.updateDataPreview();
+                window.dataVizTool.showStatus('Demo data loaded successfully', 'success');
+            };
+            
+            document.querySelector('.sidebar .section:last-child').appendChild(demoBtn);
+        });
+    </script>
+</body>
+</html>
